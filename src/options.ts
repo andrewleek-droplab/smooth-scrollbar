@@ -30,6 +30,13 @@ export class Options {
   renderByPixels = true;
 
   /**
+   * Set to `true` to use an external RAF loop.
+   * This requires wiring up/calling the scrollbar render() function yourself.
+   */
+  @boolean
+  externalRAF = false;
+
+  /**
    * Keep scrollbar tracks visible
    */
   @boolean

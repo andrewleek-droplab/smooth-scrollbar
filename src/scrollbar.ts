@@ -374,7 +374,10 @@ export class Scrollbar implements I.Scrollbar {
     this._listeners.clear();
 
     this.setMomentum(0, 0);
-    cancelAnimationFrame(this._renderID);
+
+    if (!this.options.externalRAF) {
+      cancelAnimationFrame(this._renderID);
+    }
 
     if (this._observer) {
       this._observer.disconnect();
@@ -407,6 +410,32 @@ export class Scrollbar implements I.Scrollbar {
     this._plugins.length = 0;
   }
 
+  render() {
+    const {
+      _momentum,
+    } = this;
+
+    if (_momentum.x || _momentum.y) {
+      const nextX = this._nextTick('x');
+      const nextY = this._nextTick('y');
+
+      _momentum.x = nextX.momentum;
+      _momentum.y = nextY.momentum;
+
+      this.setPosition(nextX.position, nextY.position);
+    }
+
+    const remain = { ...this._momentum };
+
+    this._plugins.forEach((plugin) => {
+      plugin.onRender(remain);
+    });
+
+    if (!this.options.externalRAF) {
+      this._renderID = requestAnimationFrame(this.render.bind(this));
+    }
+  }
+
   private _init() {
     this.update();
 
@@ -420,7 +449,7 @@ export class Scrollbar implements I.Scrollbar {
       plugin.onInit();
     });
 
-    this._render();
+    this.render();
   }
 
   @debounce(100, { leading: true })
@@ -459,30 +488,6 @@ export class Scrollbar implements I.Scrollbar {
     res = res && (offset.x === limit.x || offset.x === 0 || offset.y === limit.y || offset.y === 0);
 
     return res;
-  }
-
-  private _render() {
-    const {
-      _momentum,
-    } = this;
-
-    if (_momentum.x || _momentum.y) {
-      const nextX = this._nextTick('x');
-      const nextY = this._nextTick('y');
-
-      _momentum.x = nextX.momentum;
-      _momentum.y = nextY.momentum;
-
-      this.setPosition(nextX.position, nextY.position);
-    }
-
-    const remain = { ...this._momentum };
-
-    this._plugins.forEach((plugin) => {
-      plugin.onRender(remain);
-    });
-
-    this._renderID = requestAnimationFrame(this._render.bind(this));
   }
 
   private _nextTick(direction: 'x' | 'y'): { momentum: number, position: number } {

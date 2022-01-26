@@ -94,6 +94,7 @@ export interface Scrollbar {
   update(): void;
   getSize(): ScrollbarSize;
   isVisible(elem: HTMLElement): boolean;
+  render(): void;
 
   addListener(fn: ScrollListener): void;
   removeListener(fn: ScrollListener): void;
